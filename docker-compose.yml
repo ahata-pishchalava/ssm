@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  app:
+    container_name: app
+    image: 'ssm:latest'
+    ports:
+      - "8080:8080"
+    build:
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: pgdb
+    image: 'library/postgres:12.6-alpine'
+    environment:
+      - POSTGRES_USER=ahata
+      - POSTGRES_DB=ssmdb
+      - POSTGRES_PASSWORD=12345
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: /usr/local/bin/pg_isready
+      interval: 10s
+      timeout: 5s
+      retries: 2
