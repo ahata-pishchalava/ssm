@@ -1,6 +1,7 @@
 package com.example.ssm;
 
 import com.example.ssm.dto.EmployeeDTO;
+import com.example.ssm.dto.EmployeeWithUpdatedStateDTO;
 import com.example.ssm.exception.EntityNotFoundException;
 import com.example.ssm.mapper.EmployeeMapper;
 import com.example.ssm.model.Employee;
@@ -59,9 +60,9 @@ class StateMachineAppTest {
     @Transactional
     @Test
     void addEmployee() throws Exception {
-        Employee employeeEntity = Employee.builder().name("Ahata").email("aaaaa@gmail.com").build();
+        EmployeeDTO employeeEntity = EmployeeDTO.builder().name("Ahata").email("aaaaa@gmail.com").build();
 
-        mockMvc.perform(post("/employee/add")
+        mockMvc.perform(post("/api/employees/add")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(employeeEntity)))
                 .andExpect(status().isOk());
@@ -76,11 +77,10 @@ class StateMachineAppTest {
     @Transactional
     @Test
     void checkEmployee() throws Exception {
-        EmployeeDTO resultEmployeeDTO =
+        EmployeeWithUpdatedStateDTO resultEmployeeDTO =
                 getExpectedResultEmployeeDTO("employee1", EmployeeState.IN_CHECK, true);
 
-
-        mockMvc.perform(post("/employee/{employeeId}/check", resultEmployeeDTO.getId())
+        mockMvc.perform(post("/api/employees/{employeeId}/check", resultEmployeeDTO.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(mvcResult -> {
@@ -93,15 +93,15 @@ class StateMachineAppTest {
     @Transactional
     @Test
     void approveEmployee() throws Exception {
-        EmployeeDTO resultEmployeeDTO =
+        EmployeeWithUpdatedStateDTO resultEmployeeDTO =
                 getExpectedResultEmployeeDTO("employee2", EmployeeState.APPROVED, true);
 
-        mockMvc.perform(post("/employee/{employeeId}/approve", resultEmployeeDTO.getId())
+        mockMvc.perform(post("/api/employees/{employeeId}/approve", resultEmployeeDTO.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(mvcResult -> {
                     String json = mvcResult.getResponse().getContentAsString();
-                    EmployeeDTO employeeDTO = objectMapper.readValue(json, EmployeeDTO.class);
+                    EmployeeWithUpdatedStateDTO employeeDTO = objectMapper.readValue(json, EmployeeWithUpdatedStateDTO.class);
                     assertEquals(resultEmployeeDTO, employeeDTO);
                 });
     }
@@ -109,15 +109,15 @@ class StateMachineAppTest {
     @Transactional
     @Test
     void activateEmployee() throws Exception {
-        EmployeeDTO resultEmployeeDTO =
+        EmployeeWithUpdatedStateDTO resultEmployeeDTO =
                 getExpectedResultEmployeeDTO("employee3", EmployeeState.ACTIVE, true);
 
-        mockMvc.perform(post("/employee/{employeeId}/activate", resultEmployeeDTO.getId())
+        mockMvc.perform(post("/api/employees/{employeeId}/activate", resultEmployeeDTO.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(mvcResult -> {
                     String json = mvcResult.getResponse().getContentAsString();
-                    EmployeeDTO employeeDTO = objectMapper.readValue(json, EmployeeDTO.class);
+                    EmployeeWithUpdatedStateDTO employeeDTO = objectMapper.readValue(json, EmployeeWithUpdatedStateDTO.class);
                     assertEquals(resultEmployeeDTO, employeeDTO);
                 });
     }
@@ -126,7 +126,7 @@ class StateMachineAppTest {
     @Test
     void checkEmployeeNegative() throws Exception {
         UUID id = UUID.randomUUID();
-        mockMvc.perform(post("/employee/{employeeId}/check", id)
+        mockMvc.perform(post("/api/employees/{employeeId}/check", id)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(result ->  assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
@@ -137,15 +137,15 @@ class StateMachineAppTest {
     @Transactional
     @Test
     void approveEmployeeNegative() throws Exception {
-        EmployeeDTO resultEmployeeDTO =
+        EmployeeWithUpdatedStateDTO resultEmployeeDTO =
                 getExpectedResultEmployeeDTO("employee1", EmployeeState.ADDED, false);
 
-        mockMvc.perform(post("/employee/{employeeId}/approve", resultEmployeeDTO.getId())
+        mockMvc.perform(post("/api/employees/{employeeId}/approve", resultEmployeeDTO.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(mvcResult -> {
                     String json = mvcResult.getResponse().getContentAsString();
-                    EmployeeDTO employeeDTO = objectMapper.readValue(json, EmployeeDTO.class);
+                    EmployeeWithUpdatedStateDTO employeeDTO = objectMapper.readValue(json, EmployeeWithUpdatedStateDTO.class);
                     assertEquals(resultEmployeeDTO, employeeDTO);
                 });
     }
@@ -157,11 +157,10 @@ class StateMachineAppTest {
         return optionalEmployee.get();
     }
 
-    private EmployeeDTO getExpectedResultEmployeeDTO(String employeeName, EmployeeState state, boolean isUpdatedState) {
+    private EmployeeWithUpdatedStateDTO getExpectedResultEmployeeDTO(String employeeName, EmployeeState state, boolean isUpdatedState) {
         Employee employeeEntity = getEmployeeEntity(employeeName);
-        EmployeeDTO resultEmployeeDTO = employeeMapper.entityToEntityDTO(employeeEntity);
+        EmployeeWithUpdatedStateDTO resultEmployeeDTO = employeeMapper.getEmployeeWithUpdatedState(employeeEntity, isUpdatedState);
         resultEmployeeDTO.setState(state);
-        resultEmployeeDTO.setStateChanged(isUpdatedState);
         return resultEmployeeDTO;
     }
 }

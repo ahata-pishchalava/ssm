@@ -2,25 +2,35 @@ package com.example.ssm.controller;
 
 import com.example.ssm.dto.EmployeeDTO;
 import com.example.ssm.exception.EntityNotFoundException;
-import com.example.ssm.model.Employee;
 import com.example.ssm.service.EmployeeService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/employee")
+@RequestMapping("/api/employees")
 public class EmployeeController {
 
     private final EmployeeService service;
 
     @PostMapping("/add")
-    public ResponseEntity<EmployeeDTO> addEmployee(@RequestBody final Employee employee) {
+    public ResponseEntity<EmployeeDTO> addEmployee(@RequestBody final EmployeeDTO employee) {
          return new ResponseEntity<>(service.addEmployee(employee), HttpStatus.OK);
+    }
+
+    @PostMapping("/{employeeId}")
+    public ResponseEntity<EmployeeDTO> getEmployee(@PathVariable final String employeeId) throws EntityNotFoundException{
+        return new ResponseEntity<>(service.getEmployee(UUID.fromString(employeeId)), HttpStatus.OK);
+    }
+
+    @PostMapping("/")
+    public ResponseEntity<List<EmployeeDTO>> getAllEmployee() {
+        return new ResponseEntity<>(service.getAllEmployee(), HttpStatus.OK);
     }
 
     @PostMapping("/{employeeId}/activate")

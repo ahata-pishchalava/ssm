@@ -7,6 +7,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -20,5 +21,4 @@ public class EmployeeDTO {
 
     private EmployeeState state;
 
-    private boolean isStateChanged = false;
 }
